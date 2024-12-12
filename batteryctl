@@ -1,0 +1,29 @@
+#!/sbin/openrc-run
+
+description="Save and restore battery charge settings"
+
+save_dir="/var/lib/batteryctl"
+end_threshold_file="$save_dir/end_threshold"
+
+start() {
+	ebegin "Setting battery charge stop threshold to saved value"
+	# fails to start first time if file does not exist
+	if [ ! -d "save_dir" ]; then
+		mkdir -p "$save_dir"
+	fi
+
+	if [ ! -f "$end_threshold_file" ]; then	
+		echo "79" > "$end_threshold_file"
+	fi
+	
+	cat "$end_threshold_file" > /sys/class/power_supply/BAT0/charge_control_end_threshold
+
+	eend $?
+}
+
+stop() {
+	ebegin "Saving battery charge stop threshold"
+	cat /sys/class/power_supply/BAT0/charge_control_end_threshold > "$end_threshold_file"
+
+	eend $?
+}
